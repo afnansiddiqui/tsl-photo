@@ -21,7 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         data: {
           url,
           comments: {
-            create: comments,
+            create: comments, 
           },
         },
       });
