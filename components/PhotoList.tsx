@@ -70,7 +70,7 @@ const PhotoList = () => {
             <Image
               src={photo.url}
               alt="Photo"
-              className="object-cover w-full h-48"
+              className="object-cover"
               width={300}
               height={300}
             />
