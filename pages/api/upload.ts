@@ -1,4 +1,3 @@
-// pages/api/upload.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
 import formidable, { IncomingForm } from 'formidable';
 import fs from 'fs';
@@ -14,12 +13,12 @@ export const config = {
   },
 };
 
-const uploadDir = path.join(process.cwd(), 'public/uploads');
+const uploadDir = path.join('/tmp/uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -55,7 +54,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       fs.unlinkSync(filePath);
       console.log('Original image deleted');
 
-      const fileUrl = `/uploads/resized_${fileName}`;
+      const fileUrl = `uploads/resized_${fileName}`;
 
       const newPhoto = await prisma.photo.create({
         data: { url: fileUrl },
