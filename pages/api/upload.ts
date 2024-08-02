@@ -14,7 +14,7 @@ export const config = {
   },
 };
 
-const uploadDir = '/tmp/uploads'; // Temporary directory in Vercel build environment
+const uploadDir = path.join(process.cwd(), 'public/uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
@@ -52,12 +52,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .toFile(resizedFilePath);
       console.log('Image resized successfully');
 
-      // Move the resized file to the public directory for serving
-      const publicFilePath = path.join(process.cwd(), 'public/uploads', `resized_${fileName}`);
-      fs.renameSync(resizedFilePath, publicFilePath);
-      console.log('Resized image moved to public directory');
-
-      // Clean up temporary directory
       fs.unlinkSync(filePath);
       console.log('Original image deleted');
 

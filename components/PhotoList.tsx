@@ -1,4 +1,5 @@
 'use client';
+import Image from 'next/image';
 import { useEffect, useState, ChangeEvent, FormEvent } from 'react';
 
 type Comment = {
@@ -66,10 +67,12 @@ const PhotoList = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-6xl w-full">
         {photos.map((photo) => (
           <div key={photo.id} className="relative border border-gray-700 rounded-lg overflow-hidden bg-gray-800 shadow-lg">
-            <img
+            <Image
               src={photo.url}
               alt="Photo"
               className="object-cover w-full h-48"
+              width={480}
+              height={480}
             />
             <div className="p-4">
               {photo.comments.map((comment) => (
