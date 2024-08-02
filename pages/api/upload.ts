@@ -1,4 +1,4 @@
-// pages/api/upload.ts
+'use client';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import formidable, { IncomingForm } from 'formidable';
 import fs from 'fs';

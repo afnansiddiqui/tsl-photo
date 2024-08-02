@@ -1,4 +1,4 @@
-// pages/api/photos.ts
+'use client';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { PrismaClient } from '@prisma/client';
 
