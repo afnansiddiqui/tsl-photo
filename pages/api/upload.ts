@@ -19,11 +19,7 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
+export default function handler(req: NextApiRequest, res: NextApiResponse) {
   const form = new IncomingForm({
     uploadDir,
     keepExtensions: true,
@@ -31,13 +27,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   form.parse(req, async (err, fields, files) => {
     if (err) {
-      console.error('Error parsing form:', err);
-      return res.status(500).json({ error: 'File upload failed', details: (err as Error).message });
+      return res.status(500).json({ error: 'File upload failed' });
     }
 
     const file = (files.file as formidable.File[])[0];
     if (!file) {
-      console.error('No file uploaded');
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
@@ -49,22 +43,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await sharp(filePath)
         .resize(600, 600)
         .toFile(resizedFilePath);
-      console.log('Image resized successfully');
 
       fs.unlinkSync(filePath);
-      console.log('Original image deleted');
 
       const fileUrl = `/uploads/resized_${fileName}`;
 
       const newPhoto = await prisma.photo.create({
         data: { url: fileUrl },
       });
-      console.log('Image URL saved to database');
-
       res.status(201).json(newPhoto);
     } catch (error) {
-      console.error('Error processing image or saving to database:', error);
-      res.status(500).json({ error: 'Failed to process image', details: (error as Error).message });
+      res.status(500).json({ error: 'Failed to process image' });
     }
   });
 }
