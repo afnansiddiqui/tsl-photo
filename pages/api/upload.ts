@@ -33,6 +33,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
 
     const file = (files.file as formidable.File[])[0];
     if (!file) {
+      console.error('No file uploaded');
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
