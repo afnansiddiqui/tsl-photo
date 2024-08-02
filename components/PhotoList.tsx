@@ -71,6 +71,8 @@ const PhotoList = () => {
               src={photo.url}
               alt="Photo"
               className="object-cover w-full h-48"
+              width={300}
+              height={300}
             />
             <div className="p-4">
               {photo.comments.map((comment) => (

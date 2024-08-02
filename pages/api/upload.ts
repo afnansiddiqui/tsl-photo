@@ -19,6 +19,16 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
+// Test Prisma connection
+(async () => {
+  try {
+    await prisma.$connect();
+    console.log('Prisma connected successfully');
+  } catch (error) {
+    console.error('Error connecting to Prisma:', error);
+  }
+})();
+
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
   const form = new IncomingForm({
     uploadDir,
