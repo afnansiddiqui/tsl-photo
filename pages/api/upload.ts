@@ -14,7 +14,8 @@ export const config = {
   },
 };
 
-const uploadDir = '/tmp/uploads'; // Temporary directory in Vercel build environment
+// Temporary directory in Vercel build environment
+const uploadDir = '/tmp/uploads';
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
@@ -27,6 +28,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
 
   form.parse(req, async (err, fields, files) => {
     if (err) {
+      console.error('File upload error:', err);
       return res.status(500).json({ error: 'File upload failed' });
     }
 
@@ -49,7 +51,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       fs.unlinkSync(filePath);
 
       // Save photo information to database
-      const fileUrl = `/api/files/resized_${fileName}`;
+      const fileUrl = `/api/files/${fileName}`;
       const newPhoto = await prisma.photo.create({
         data: { url: fileUrl },
       });
