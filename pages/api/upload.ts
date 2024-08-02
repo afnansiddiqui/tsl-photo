@@ -30,7 +30,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       return res.status(500).json({ error: 'File upload failed' });
     }
 
-    const file = (files.file as formidable.File[])[0]; // Use a type assertion
+    const file = (files.file as formidable.File[])[0];
     if (!file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
@@ -40,12 +40,10 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     const resizedFilePath = path.join(uploadDir, `resized_${fileName}`);
 
     try {
-      // Resize the image to 600x600 pixels
       await sharp(filePath)
         .resize(600, 600)
         .toFile(resizedFilePath);
 
-      // Remove the original file if needed
       fs.unlinkSync(filePath);
 
       const fileUrl = `/uploads/resized_${fileName}`;

@@ -8,7 +8,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method === 'GET') {
     try {
       const photos = await prisma.photo.findMany({
-        include: { comments: true }, // Include comments with photos
+        include: { comments: true },
       });
       res.status(200).json(photos);
     } catch (error) {
