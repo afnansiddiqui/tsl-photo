@@ -91,7 +91,7 @@ const PhotoList = () => {
               />
               <button
                 type="submit"
-                className="mt-2 bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition"
+                className="mt-2 bg-zinc-900 text-white p-2 rounded hover:bg-zinc-700 transition"
               >
                 Post Comment
               </button>
