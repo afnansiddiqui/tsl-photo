@@ -20,4 +20,4 @@ model Comment {
   content   String
   photo     Photo    @relation(fields: [photoId], references: [id])
   createdAt DateTime @default(now())
-}
+} 
