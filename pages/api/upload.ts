@@ -1,4 +1,4 @@
-// pages/api/upload.ts
+
 import type { NextApiRequest, NextApiResponse } from 'next';
 import formidable, { IncomingForm } from 'formidable';
 import fs from 'fs';
@@ -14,19 +14,14 @@ export const config = {
 };
 
 // Temporary directory in Vercel build environment
-const tempUploadDir = '/tmp/uploads';
-if (!fs.existsSync(tempUploadDir)) {
-  fs.mkdirSync(tempUploadDir, { recursive: true });
-}
-
-const publicUploadDir = path.join(process.cwd(), 'public/uploads');
-if (!fs.existsSync(publicUploadDir)) {
-  fs.mkdirSync(publicUploadDir, { recursive: true });
+const uploadDir = '/tmp/uploads';
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
 }
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
   const form = new IncomingForm({
-    uploadDir: tempUploadDir,
+    uploadDir,
     keepExtensions: true,
   });
 
@@ -41,14 +36,14 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    const tempFilePath = file.filepath;
-    const fileName = path.basename(tempFilePath);
-    const publicFilePath = path.join(publicUploadDir, fileName);
-    const fileUrl = `/uploads/${fileName}`;
+    const filePath = file.filepath;
+    const fileName = path.basename(filePath);
+    const fileUrl = `/api/files/${fileName}`;
 
     try {
-      // Move file to public directory
-      fs.renameSync(tempFilePath, publicFilePath);
+      // Move file to temporary directory without resizing
+      const newFilePath = path.join(uploadDir, fileName);
+      fs.renameSync(filePath, newFilePath);
 
       // Save photo information to database
       const newPhoto = await prisma.photo.create({
@@ -62,3 +57,6 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     }
   });
 }
+
+
+
