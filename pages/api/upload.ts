@@ -28,7 +28,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   form.parse(req, async (err, fields, files) => {
     if (err) {
       console.error('Error parsing form:', err);
-      return res.status(500).json({ error: 'File upload failed' });
+      return res.status(500).json({ error: 'File upload failed', details: (err as Error).message });
     }
 
     const file = (files.file as formidable.File[])[0];
@@ -55,7 +55,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       res.status(201).json(newPhoto);
     } catch (error) {
       console.error('Error processing image or saving to database:', error);
-      res.status(500).json({ error: 'Failed to process image' });
+      res.status(500).json({ error: 'Failed to process image', details: (error as Error).message });
     }
   });
 }
