@@ -19,16 +19,6 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Test Prisma connection
-(async () => {
-  try {
-    await prisma.$connect();
-    console.log('Prisma connected successfully');
-  } catch (error) {
-    console.error('Error connecting to Prisma:', error);
-  }
-})();
-
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
   const form = new IncomingForm({
     uploadDir,
@@ -37,13 +27,11 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
 
   form.parse(req, async (err, fields, files) => {
     if (err) {
-      console.error('Error parsing form:', err);
-      return res.status(500).json({ error: 'File upload failed', details: (err as Error).message });
+      return res.status(500).json({ error: 'File upload failed' });
     }
 
     const file = (files.file as formidable.File[])[0];
     if (!file) {
-      console.error('No file uploaded');
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
@@ -65,8 +53,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       });
       res.status(201).json(newPhoto);
     } catch (error) {
-      console.error('Error processing image or saving to database:', error);
-      res.status(500).json({ error: 'Failed to process image', details: (error as Error).message });
+      res.status(500).json({ error: 'Failed to process image' });
     }
   });
 }
