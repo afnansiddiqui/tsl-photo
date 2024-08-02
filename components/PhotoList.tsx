@@ -1,109 +1,71 @@
-'use client';
-import Image from 'next/image';
-import { useEffect, useState, ChangeEvent, FormEvent } from 'react';
+// pages/api/upload.ts
+import type { NextApiRequest, NextApiResponse } from 'next';
+import formidable, { IncomingForm } from 'formidable';
+import fs from 'fs';
+import path from 'path';
+import sharp from 'sharp';
+import { PrismaClient } from '@prisma/client';
 
-type Comment = {
-  id: number;
-  content: string;
+const prisma = new PrismaClient();
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
 };
 
-type Photo = {
-  id: number;
-  url: string;
-  comments: Comment[];
-};
+const uploadDir = path.join('/tmp/uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 
-const PhotoList = () => {
-  const [photos, setPhotos] = useState<Photo[]>([]);
-  const [newComments, setNewComments] = useState<Record<number, string>>({});
+export default function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
-  const fetchPhotos = async () => {
-    try {
-      const response = await fetch('/api/photos');
-      if (!response.ok) {
-        throw new Error('Failed to fetch photos');
-      }
-      const data = await response.json();
-      setPhotos(data);
-    } catch (error) {
-      console.error('Error fetching photos:', error);
+  const form = new IncomingForm({
+    uploadDir,
+    keepExtensions: true,
+  });
+
+  form.parse(req, async (err, fields, files) => {
+    if (err) {
+      console.error('Error parsing form:', err);
+      return res.status(500).json({ error: 'File upload failed', details: (err as Error).message });
     }
-  };
 
-  useEffect(() => {
-    fetchPhotos();
-    const intervalId = setInterval(fetchPhotos, 1000);
-    return () => clearInterval(intervalId);
-  }, []);
-
-  const handleCommentChange = (photoId: number, event: ChangeEvent<HTMLTextAreaElement>) => {
-    setNewComments({
-      ...newComments,
-      [photoId]: event.target.value,
-    });
-  };
-
-  const handleCommentSubmit = async (event: FormEvent, photoId: number) => {
-    event.preventDefault();
-    const content = newComments[photoId];
-    try {
-      await fetch('/api/comments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content, photoId }),
-      });
-      setNewComments({
-        ...newComments,
-        [photoId]: '',
-      });
-      fetchPhotos();
-    } catch (error) {
-      console.error('Error posting comment:', error);
+    const file = (files.file as formidable.File[])[0];
+    if (!file) {
+      console.error('No file uploaded');
+      return res.status(400).json({ error: 'No file uploaded' });
     }
-  };
 
-  return (
-    <div className="flex justify-center items-center min-h-screen p-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-6xl w-full">
-        {photos.map((photo) => (
-          <div key={photo.id} className="relative rounded-lg overflow-hidden  shadow-lg">
-            <Image
-              src={photo.url}
-              alt="Photo"
-              className="object-cover"
-              width={300}
-              height={300}
-            />
-            <div className="p-4">
-              {photo.comments.map((comment) => (
-                <div key={comment.id} className="mb-2 p-2 bg-gray-700 rounded text-white">
-                  <p>{comment.content}</p>
-                </div>
-              ))}
-            </div>
-            <form
-              onSubmit={(e) => handleCommentSubmit(e, photo.id)}
-              className="p-4 "
-            >
-              <textarea
-                value={newComments[photo.id] || ''}
-                onChange={(e) => handleCommentChange(photo.id, e)}
-                rows={2}
-                className="w-full border border-gray-600 p-2 rounded bg-gray-900 text-white"
-                placeholder="Write a comment..."
-              />
-              <button
-                type="submit"
-                className="mt-2 bg-zinc-900 text-white p-2 rounded hover:bg-zinc-700 transition"
-              >
-                Post Comment
-              </button>
-            </form>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
+    const filePath = file.filepath;
+    const fileName = path.basename(filePath);
+    const resizedFilePath = path.join(uploadDir, `resized_${fileName}`);
 
-export default PhotoList;
+    try {
+      console.log(`Starting image resize: ${filePath} -> ${resizedFilePath}`);
+      await sharp(filePath)
+        .resize(600, 600)
+        .toFile(resizedFilePath);
+      console.log('Image resized successfully');
+
+      fs.unlinkSync(filePath);
+      console.log('Original image deleted');
+
+      const fileUrl = `uploads/resized_${fileName}`;
+
+      const newPhoto = await prisma.photo.create({
+        data: { url: fileUrl },
+      });
+      console.log('Image URL saved to database');
+
+      res.status(201).json(newPhoto);
+    } catch (error) {
+      console.error('Error processing image or saving to database:', error);
+      res.status(500).json({ error: 'Failed to process image', details: (error as Error).message });
+    }
+  });
+}
